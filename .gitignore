@@ -1,0 +1,13 @@
+.idea
+.settings
+.classpath
+target
+*.iml
+.project
+.pydevproject
+.cache-main
+jar
+tmp
+venv
+*.pyc
+classes
