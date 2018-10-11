@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #Script:        date_util.sh
-#Author:        吕学文<lvxw@fun.tv>
+#Author:        吕学文<2622478542@qq.com>
 #Date:          2018-10-08
 #Description:   常用处理时间的函数
 #Usage:         工具shell，供其他shell脚本引入

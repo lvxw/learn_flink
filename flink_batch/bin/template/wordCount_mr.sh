@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 #Script:        wordCount_mr.sh
-#Author:        吕学文<lvxw@fun.tv>
+#Author:        吕学文<2622478542@qq.com>
 #Date:          2018-10-08
 #Description:
 #Usage:         wordCount_mr.sh
@@ -16,9 +16,9 @@ function set_env(){
 
 #设置日、周、月的数据输入、输出路径
 function init(){
-    hdfs_test_input=/tmp/lvxw/1
+    hdfs_test_input=/tmp/lvxw/test
 
-    hdfs_test_output=/tmp/lvxw/xxxxxxxxx
+    hdfs_test_output=/tmp/lvxw/zzzzzzzzzzzzzzzzz
 }
 
 function execute_mr(){
@@ -28,7 +28,7 @@ function execute_mr(){
         -yD fs.output.always-create-directory=true \
         -yD fs.overwrite-file=true \
         -ynm WordCount \
-        -yn 2 -yjm 1024 -ytm 1024 \
+        -yn 2 -yjm 2048 -ytm 2048 -ys 2 \
         -c com.test.business.template.WordCount \
         jar/LearnFlink.jar \
         "{\"input_dir\":\"${hdfs_test_input}\", \
