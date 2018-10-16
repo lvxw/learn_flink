@@ -13,8 +13,7 @@ class BaseProgram extends App {
   var dataDate:String = _
 
   val runPatternList = List("local","test","public")
-  var conf:Configuration = _
-  lazy val env: ExecutionEnvironment = initFlinkConf()
+  lazy val env: ExecutionEnvironment = getLinkEnvironment()
   lazy val tEnv = TableEnvironment.getTableEnvironment(env)
 
   def init(): Unit ={
@@ -29,12 +28,11 @@ class BaseProgram extends App {
     dataDate = paramMap.getOrElse("data_date","")
   }
 
-  def initFlinkConf():ExecutionEnvironment = {
-    conf = new Configuration()
+  def getLinkEnvironment():ExecutionEnvironment = {
+    val conf = new Configuration()
     conf.setBoolean("fs.overwrite-file", true)
     conf.setBoolean("fs.output.always-create-directory", true)
     conf.setString("fs.default-scheme", "hdfs://artemis-02:9000/")
-
 
     if(runPattern == runPatternList(0)){
       conf.setString("fs.default-scheme","file:///")
