@@ -1,8 +1,9 @@
 package com.test.common
 
 import com.test.util.StringUtils
-import org.apache.flink.api.scala.ExecutionEnvironment
+import org.apache.flink.api.scala._
 import org.apache.flink.configuration.Configuration
+import org.apache.flink.table.api._
 
 class BaseProgram extends App {
   lazy val paramMap:Map[String,String] = StringUtils.jsonStrToMap(args).asInstanceOf[Map[String,String]]
@@ -10,15 +11,15 @@ class BaseProgram extends App {
   var inputDir:String = _
   var outputDir:String = _
   var dataDate:String = _
-  val appName = this.getClass.getSimpleName.replace("$", "")
 
   val runPatternList = List("local","test","public")
-  var flinkConf:Configuration = _
-  var executionEnvironment: ExecutionEnvironment = _
+  var conf:Configuration = _
+  lazy val env: ExecutionEnvironment = initFlinkConf()
+  lazy val tEnv = TableEnvironment.getTableEnvironment(env)
 
   def init(): Unit ={
     System.setProperty("scala.time","")
-    delayedInit(executionEnvironment.execute(this.getClass.getSimpleName))
+    delayedInit(env.execute(this.getClass.getSimpleName))
   }
 
   def initParams():Unit ={
@@ -28,21 +29,20 @@ class BaseProgram extends App {
     dataDate = paramMap.getOrElse("data_date","")
   }
 
-  def initFlinkConf():Unit = {
-    flinkConf = new Configuration()
-    flinkConf.setBoolean("fs.overwrite-file", true)
-    flinkConf.setBoolean("fs.output.always-create-directory", true)
-    flinkConf.setString("fs.default-scheme", "hdfs://artemis-02:9000/")
+  def initFlinkConf():ExecutionEnvironment = {
+    conf = new Configuration()
+    conf.setBoolean("fs.overwrite-file", true)
+    conf.setBoolean("fs.output.always-create-directory", true)
+    conf.setString("fs.default-scheme", "hdfs://artemis-02:9000/")
 
-    executionEnvironment = ExecutionEnvironment.getExecutionEnvironment
+
     if(runPattern == runPatternList(0)){
-      flinkConf.setString("fs.default-scheme","file:///")
-      executionEnvironment = ExecutionEnvironment.createLocalEnvironment(flinkConf)
+      conf.setString("fs.default-scheme","file:///")
+      return ExecutionEnvironment.createLocalEnvironment(conf)
     }
+    ExecutionEnvironment.getExecutionEnvironment
   }
 
   init()
   initParams()
-  initFlinkConf()
-
 }

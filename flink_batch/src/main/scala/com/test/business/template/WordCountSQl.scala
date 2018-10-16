@@ -14,12 +14,16 @@ import org.apache.flink.core.fs.FileSystem.WriteMode
           \"run_pattern\":\"local\"
         }
   */
-object WordCount extends BaseProgram{
+object WordCountSQL extends BaseProgram{
+  case class WordCount(word:String, num:Long)
 
   val text = env.readTextFile(inputDir)
-  val result = text.flatMap ( _.split(","))
-    .map ((_, 1))
-      .groupBy(0)
-      .sum(1)
+  val dataSet = text.flatMap ( _.split(","))
+    .map (WordCount(_, 1))
+
+  tEnv.registerDataSet("wordcount", dataSet)
+
+  private val table = tEnv.sqlQuery("select word, sum(num) from wordcount group by word")
+  private val result: DataSet[WordCount] = tEnv.toDataSet[WordCount](table)
   result.writeAsCsv(outputDir,"\n",",",WriteMode.OVERWRITE)
 }

@@ -24,6 +24,7 @@
   </scm>
   <modules>
     <module>flink_batch</module>
+    <module>flink_stream</module>
   </modules>
 
   <properties>
@@ -127,6 +128,16 @@
       <artifactId>flink-connector-filesystem_${scala.main}</artifactId>
       <version>${flink.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-table_${scala.main}</artifactId>
+      <version>${flink.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-clients_${scala.main}</artifactId>
+      <version>${flink.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -196,7 +207,7 @@
             <configuration>
               <artifactSet>
                 <includes>
-                  <include>groupId:artifactId</include>
+                  <include>org.apache.flink:flink-table_${scala.main}</include>
                 </includes>
               </artifactSet>
             </configuration>
