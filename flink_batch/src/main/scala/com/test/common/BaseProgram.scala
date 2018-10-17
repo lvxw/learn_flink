@@ -1,19 +1,19 @@
 package com.test.common
 
-import com.test.util.StringUtils
+import com.test.util.ParamUtils
 import org.apache.flink.api.scala._
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.table.api._
 
 class BaseProgram extends App {
-  lazy val paramMap:Map[String,String] = StringUtils.jsonStrToMap(args).asInstanceOf[Map[String,String]]
+  lazy val paramMap:Map[String,String] = ParamUtils.jsonStrToMap(args.mkString("")).asInstanceOf[Map[String,String]]
   var runPattern:String = _
   var inputDir:String = _
   var outputDir:String = _
   var dataDate:String = _
 
   val runPatternList = List("local","test","public")
-  lazy val env: ExecutionEnvironment = getLinkEnvironment()
+  val env: ExecutionEnvironment = getLinkEnvironment()
   lazy val tEnv = TableEnvironment.getTableEnvironment(env)
 
   def init(): Unit ={

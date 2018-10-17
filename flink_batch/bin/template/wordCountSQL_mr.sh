@@ -17,7 +17,6 @@ function set_env(){
 #设置日、周、月的数据输入、输出路径
 function init(){
     hdfs_test_input=/tmp/lvxw/test
-
     hdfs_test_output=/tmp/lvxw/zzzzzzzzzzzzzzzzz
 }
 

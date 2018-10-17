@@ -3,43 +3,57 @@ package com.test.common
 import java.text.SimpleDateFormat
 import java.util.Properties
 
-import com.test.util.StringUtils
+import com.test.util.ParamUtils
 import org.apache.flink.api.common.serialization.SimpleStringSchema
-import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer08
+import org.apache.flink.streaming.connectors.redis.RedisSink
+import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisPoolConfig
+import org.apache.flink.streaming.connectors.redis.common.mapper.{RedisCommand, RedisCommandDescription, RedisMapper}
 
 class BaseProgram extends App {
-  lazy val paramMap:Map[String,String] = StringUtils.jsonStrToMap(args).asInstanceOf[Map[String,String]]
-  var runPattern:String = _
-  var topic:String = _
+  val sEnv: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
+  val kafkaProps:Properties = new Properties()
+  val className = this.getClass.getSimpleName.replace("$", "")
 
   val runPatternList = List("local","test","public")
-  var conf:Configuration = _
-  lazy val sEnv: StreamExecutionEnvironment = initFlinkStreamEnvironment()
-  var kafkaProps:Properties = new Properties()
-  val sdf = new SimpleDateFormat("yyyyMMddHHmm")
+  var mainArgsMap:Map[String,String] = _
+  var fixedParamMap:Map[String,Any] = _
+  var runPattern:String = _
+  var topic:String = _
+  var graphiteMap:Map[String,String]= _
+  var redisMap:Map[String,String] = _
+
+  lazy val kafkaConsumer:FlinkKafkaConsumer08[String] = new FlinkKafkaConsumer08[String](topic, new SimpleStringSchema(), kafkaProps)
+  lazy val graphiteSink = new GraphiteSink[(String, String)](graphiteMap.getOrElse("graphite_host",""),graphiteMap.getOrElse("graphite_port","0").toInt,graphiteMap.getOrElse("graphite_batchSize","0").toInt)
+  lazy val redisSink:RedisSink[(String, String)] = new RedisSink[(String, String)](
+    new FlinkJedisPoolConfig.Builder().setHost(redisMap.getOrElse("redis_host","localhost")).setPort(redisMap.getOrElse("redis_port","6379").toInt).setDatabase(redisMap.getOrElse("redis_db","0").toInt).build(),
+    new RedisMapperImpl()
+  )
 
   def init(): Unit ={
-    System.setProperty("scala.time","")
-    delayedInit(sEnv.execute(this.getClass.getSimpleName))
+    mainArgsMap = ParamUtils.jsonStrToMap(args.mkString("")).asInstanceOf[Map[String,String]]
+    fixedParamMap = ParamUtils.getClassPathFileContent("fixed-params.conf")
+    delayedInit(sEnv.execute(className))
   }
 
   def initParams():Unit ={
-    runPattern = paramMap.getOrElse("run_pattern","")
-    val zookeeperHost = paramMap.getOrElse("zookeeper_host","")
-    val kafkaBroker = paramMap.getOrElse("kafka_broker","")
-    val group = paramMap.getOrElse("group","")
-    topic = paramMap.getOrElse("topic","")
+    runPattern = mainArgsMap.getOrElse("run_pattern","")
+    topic = mainArgsMap.getOrElse("topic","")
+    val group = mainArgsMap.getOrElse("group",className)
 
-    kafkaProps.setProperty("zookeeper.connect", zookeeperHost)
-    kafkaProps.setProperty("bootstrap.servers", kafkaBroker)
+    val testOrProductParamMap = if(runPattern==runPatternList(0) || runPattern==runPatternList(1)){
+      fixedParamMap.get(runPatternList(1)).get.asInstanceOf[Map[String,Any]]
+    }else{
+      fixedParamMap.get(runPatternList(2)).get.asInstanceOf[Map[String,Any]]
+    }
+    val zookeeperKafkaMap = testOrProductParamMap.get("zk_kafka").get.asInstanceOf[Map[String,String]]
+    graphiteMap = testOrProductParamMap.get("graphite").get.asInstanceOf[Map[String,String]]
+    redisMap = testOrProductParamMap.get("redis").get.asInstanceOf[Map[String,String]]
+
+    kafkaProps.setProperty("zookeeper.connect", zookeeperKafkaMap.getOrElse("zk_connect",""))
+    kafkaProps.setProperty("bootstrap.servers", zookeeperKafkaMap.getOrElse("kafka_broker",""))
     kafkaProps.setProperty("group.id", group)
-  }
-
-  def initFlinkStreamEnvironment():StreamExecutionEnvironment = {
-
-    StreamExecutionEnvironment.getExecutionEnvironment
   }
 
   def getKafkaConsumer(topic:String = topic, kafkaProps:Properties = kafkaProps):FlinkKafkaConsumer08[String] ={
@@ -49,3 +63,14 @@ class BaseProgram extends App {
   init()
   initParams()
 }
+
+class RedisMapperImpl extends RedisMapper[(String, String)]{
+  override def getCommandDescription: RedisCommandDescription = {
+    new RedisCommandDescription(RedisCommand.RPUSH)
+  }
+
+  override def getKeyFromData(data: (String, String)): String = data._1
+
+  override def getValueFromData(data: (String, String)): String = data._2
+}
+

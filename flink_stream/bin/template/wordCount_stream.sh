@@ -16,24 +16,16 @@ function set_env(){
 
 #设置日、周、月的数据输入、输出路径
 function init(){
-    hdfs_test_input=/tmp/lvxw/test
-    hdfs_test_output=/tmp/lvxw/zzzzzzzzzzzzzzzzz
+    topic=test-flink
 }
 
 function execute_mr(){
     $FLINK_INSTALL/bin/flink run \
         -m yarn-cluster \
-        -yD fs.default-scheme=hdfs://artemis-02:9000/ \
-        -yD fs.output.always-create-directory=true \
-        -yD fs.overwrite-file=true \
-        -ynm WordCount \
-        -yn 2 -yjm 2048 -ytm 2048 -ys 2 \
-        -c com.test.business.template.WordCount \
-        jar/LearnFlink.jar \
-        "{\"input_dir\":\"${hdfs_test_input}\", \
-          \"output_dir\":\"${hdfs_test_output}\", \
-          \"run_pattern\":\"${RUN_PATTERN}\"
-        }"
+        -ynm WordCountStream \
+        -yn 2 -yjm 2048 -ytm 2048 -ys 4 \
+        -c com.test.business.template.WordCountStream \
+        jar/LearnFlink.jar --port 9001
 }
 
 set_env $1

@@ -10,7 +10,7 @@ import org.apache.flink.streaming.api.windowing.time.Time
   *
   * 执行命令
   */
-object wordCount extends App {
+object wordCountStream extends App {
   case class WordCount(word:String, count:Long)
 
   val port = ParameterTool.fromArgs(args).getInt("port")
