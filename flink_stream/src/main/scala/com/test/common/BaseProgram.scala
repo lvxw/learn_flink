@@ -63,10 +63,11 @@ class BaseProgram extends App {
   }
 
   def getStreamEnvironment(): StreamExecutionEnvironment ={
+    val env =  StreamExecutionEnvironment.getExecutionEnvironment.enableCheckpointing(checkpointInterval)
     if(checkpointInterval > 0){
-      return StreamExecutionEnvironment.getExecutionEnvironment.enableCheckpointing(checkpointInterval,checkpointMode)
+      env.getCheckpointConfig.setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE)
     }
-    StreamExecutionEnvironment.getExecutionEnvironment
+    env
   }
 
   def getKafkaConsumer(
