@@ -15,7 +15,7 @@ import org.apache.flink.util.Collector
   */
 object WordCountKafkaStream extends BaseProgram{
   val result = sEnv
-    .addSource(kafkaConsumer)
+    .addSource(getKafkaConsumer())
     .flatMap{x =>
       x.split("\\s")
     }
@@ -48,5 +48,6 @@ object WordCountKafkaStream extends BaseProgram{
       (kv(0),kv(1)+"->"+x._2)
     }
 
-  result.addSink(redisSink)
+  result.print()
+//  result.addSink(redisSink)
 }

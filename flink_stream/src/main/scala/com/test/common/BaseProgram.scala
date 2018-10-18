@@ -6,6 +6,7 @@ import com.test.util.ParamUtils
 import org.apache.flink.api.common.serialization.SimpleStringSchema
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer08
+import org.apache.flink.streaming.connectors.kafka.internals.KafkaTopicPartition
 import org.apache.flink.streaming.connectors.redis.RedisSink
 import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisPoolConfig
 import org.apache.flink.streaming.connectors.redis.common.mapper.{RedisCommand, RedisCommandDescription, RedisMapper}
@@ -15,7 +16,8 @@ class BaseProgram extends App {
   val kafkaProps:Properties = new Properties()
   val className = this.getClass.getSimpleName.replace("$", "")
 
-  val runPatternList = List("local","test","public")
+  val runPatternMap = Map(1->"local",2->"test",3->"public")
+  val consumeTypeMap = Map(1 -> "earliest",2->"latest",3->"croupOffsets",4->"specificOffsets")
   var mainArgsMap:Map[String,String] = _
   var fixedParamMap:Map[String,Any] = _
   var runPattern:String = _
@@ -23,7 +25,6 @@ class BaseProgram extends App {
   var graphiteMap:Map[String,String]= _
   var redisMap:Map[String,String] = _
 
-  lazy val kafkaConsumer:FlinkKafkaConsumer08[String] = getKafkaConsumer()
   lazy val graphiteSink = new GraphiteSink[(String, String)](graphiteMap.getOrElse("graphite_host",""),graphiteMap.getOrElse("graphite_port","0").toInt,graphiteMap.getOrElse("graphite_batchSize","0").toInt)
   lazy val redisSink:RedisSink[(String, String)] = new RedisSink[(String, String)](
     new FlinkJedisPoolConfig.Builder().setHost(redisMap.getOrElse("redis_host","localhost")).setPort(redisMap.getOrElse("redis_port","6379").toInt).setDatabase(redisMap.getOrElse("redis_db","0").toInt).build(),
@@ -41,10 +42,10 @@ class BaseProgram extends App {
     topic = mainArgsMap.getOrElse("topic","")
     val group = mainArgsMap.getOrElse("group",className)
 
-    val testOrProductParamMap = if(runPattern==runPatternList(0) || runPattern==runPatternList(1)){
-      fixedParamMap.get(runPatternList(1)).get.asInstanceOf[Map[String,Any]]
+    val testOrProductParamMap = if(runPattern==runPatternMap.get(1).get || runPattern==runPatternMap.get(2).get){
+      fixedParamMap.get(runPatternMap.get(2).get).get.asInstanceOf[Map[String,Any]]
     }else{
-      fixedParamMap.get(runPatternList(2)).get.asInstanceOf[Map[String,Any]]
+      fixedParamMap.get(runPatternMap.get(3).get).get.asInstanceOf[Map[String,Any]]
     }
     val zookeeperKafkaMap = testOrProductParamMap.get("zk_kafka").get.asInstanceOf[Map[String,String]]
     graphiteMap = testOrProductParamMap.get("graphite").get.asInstanceOf[Map[String,String]]
@@ -55,8 +56,24 @@ class BaseProgram extends App {
     kafkaProps.setProperty("group.id", group)
   }
 
-  def getKafkaConsumer(topic:String = topic, kafkaProps:Properties = kafkaProps):FlinkKafkaConsumer08[String] ={
-    new FlinkKafkaConsumer08[String](topic, new SimpleStringSchema(), kafkaProps)
+  def getKafkaConsumer(
+        topic:String = topic,
+        kafkaProps:Properties = kafkaProps,
+        consumeType:String = consumeTypeMap.getOrElse(3,"latest"),
+        specificStartupOffsets:java.util.Map[KafkaTopicPartition,java.lang.Long] = null
+      ):FlinkKafkaConsumer08[String] ={
+    val kafkaConsumer = new FlinkKafkaConsumer08[String](topic, new SimpleStringSchema(), kafkaProps)
+    if(consumeType == consumeTypeMap.get(1).get){
+      kafkaConsumer.setStartFromEarliest()
+    }else if(consumeType == consumeTypeMap.get(2).get){
+      kafkaConsumer.setStartFromLatest()
+    }else if(consumeType == consumeTypeMap.get(3).get){
+      kafkaConsumer.setStartFromGroupOffsets()
+    }else{
+      kafkaConsumer.setStartFromSpecificOffsets(specificStartupOffsets)
+    }
+
+    kafkaConsumer
   }
 
   init()
