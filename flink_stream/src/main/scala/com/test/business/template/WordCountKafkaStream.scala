@@ -10,7 +10,9 @@ import org.apache.flink.util.Collector
   * @param args (IDE 本地测试时，参数为：
         {
           \"topic\":\"test-flink\",
-          \"run_pattern\":\"local\"
+          \"run_pattern\":\"local\",
+          \"checkpoint_interval\":\"5000\",
+          \"checkpoint_mode\":\"EXACTLY_ONCE\"
         }
   */
 object WordCountKafkaStream extends BaseProgram{
@@ -48,6 +50,5 @@ object WordCountKafkaStream extends BaseProgram{
       (kv(0),kv(1)+"->"+x._2)
     }
 
-  result.print()
-//  result.addSink(redisSink)
+  result.addSink(redisSink)
 }

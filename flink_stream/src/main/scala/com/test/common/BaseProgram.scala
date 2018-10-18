@@ -4,7 +4,9 @@ import java.util.Properties
 
 import com.test.util.ParamUtils
 import org.apache.flink.api.common.serialization.SimpleStringSchema
+import org.apache.flink.streaming.api.CheckpointingMode
 import org.apache.flink.streaming.api.scala._
+import org.apache.flink.streaming.api.windowing.time.Time
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer08
 import org.apache.flink.streaming.connectors.kafka.internals.KafkaTopicPartition
 import org.apache.flink.streaming.connectors.redis.RedisSink
@@ -12,19 +14,22 @@ import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisPoolC
 import org.apache.flink.streaming.connectors.redis.common.mapper.{RedisCommand, RedisCommandDescription, RedisMapper}
 
 class BaseProgram extends App {
-  val sEnv: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
   val kafkaProps:Properties = new Properties()
   val className = this.getClass.getSimpleName.replace("$", "")
 
   val runPatternMap = Map(1->"local",2->"test",3->"public")
   val consumeTypeMap = Map(1 -> "earliest",2->"latest",3->"croupOffsets",4->"specificOffsets")
+  val checkpointModeMap = Map(1 -> "EXACTLY_ONCE",2->"AT_LEAST_ONCE")
   var mainArgsMap:Map[String,String] = _
   var fixedParamMap:Map[String,Any] = _
   var runPattern:String = _
   var topic:String = _
+  var checkpointInterval:Long =_
+  var checkpointMode:CheckpointingMode =_
   var graphiteMap:Map[String,String]= _
   var redisMap:Map[String,String] = _
 
+  lazy val sEnv = getStreamEnvironment()
   lazy val graphiteSink = new GraphiteSink[(String, String)](graphiteMap.getOrElse("graphite_host",""),graphiteMap.getOrElse("graphite_port","0").toInt,graphiteMap.getOrElse("graphite_batchSize","0").toInt)
   lazy val redisSink:RedisSink[(String, String)] = new RedisSink[(String, String)](
     new FlinkJedisPoolConfig.Builder().setHost(redisMap.getOrElse("redis_host","localhost")).setPort(redisMap.getOrElse("redis_port","6379").toInt).setDatabase(redisMap.getOrElse("redis_db","0").toInt).build(),
@@ -40,6 +45,8 @@ class BaseProgram extends App {
   def initParams():Unit ={
     runPattern = mainArgsMap.getOrElse("run_pattern","")
     topic = mainArgsMap.getOrElse("topic","")
+    checkpointInterval = mainArgsMap.getOrElse("checkpoint_interval","1").toLong
+    checkpointMode = if(mainArgsMap.getOrElse("checkpoint_mode","") == checkpointModeMap.get(1).get) CheckpointingMode.EXACTLY_ONCE else CheckpointingMode.AT_LEAST_ONCE
     val group = mainArgsMap.getOrElse("group",className)
 
     val testOrProductParamMap = if(runPattern==runPatternMap.get(1).get || runPattern==runPatternMap.get(2).get){
@@ -54,6 +61,13 @@ class BaseProgram extends App {
     kafkaProps.setProperty("zookeeper.connect", zookeeperKafkaMap.getOrElse("zk_connect",""))
     kafkaProps.setProperty("bootstrap.servers", zookeeperKafkaMap.getOrElse("kafka_broker",""))
     kafkaProps.setProperty("group.id", group)
+  }
+
+  def getStreamEnvironment(): StreamExecutionEnvironment ={
+    if(checkpointInterval > 0){
+      return StreamExecutionEnvironment.getExecutionEnvironment.enableCheckpointing(checkpointInterval,checkpointMode)
+    }
+    StreamExecutionEnvironment.getExecutionEnvironment
   }
 
   def getKafkaConsumer(
@@ -72,7 +86,6 @@ class BaseProgram extends App {
     }else{
       kafkaConsumer.setStartFromSpecificOffsets(specificStartupOffsets)
     }
-
     kafkaConsumer
   }
 
