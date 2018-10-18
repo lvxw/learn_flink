@@ -17,6 +17,8 @@ function set_env(){
 #设置日、周、月的数据输入、输出路径
 function init(){
     topic=test-flink
+    checkpoint_interval=5000
+    checkpoint_mode=EXACTLY_ONCE
 }
 
 function execute_mr(){
@@ -27,7 +29,9 @@ function execute_mr(){
         -c com.test.business.template.WordCountKafkaStream \
         jar/LearnFlink.jar \
         "{\"topic\":\"${topic}\", \
-          \"run_pattern\":\"${RUN_PATTERN}\" \
+          \"run_pattern\":\"${RUN_PATTERN}\", \
+          \"checkpoint_interval\":\"${checkpoint_interval}\", \
+          \"checkpoint_mode\":\"${checkpoint_mode}\" \
         }"
 }
 

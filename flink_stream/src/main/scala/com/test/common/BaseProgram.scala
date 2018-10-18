@@ -44,7 +44,7 @@ class BaseProgram extends App {
   def initParams():Unit ={
     runPattern = mainArgsMap.getOrElse("run_pattern","")
     topic = mainArgsMap.getOrElse("topic","")
-    checkpointInterval = mainArgsMap.getOrElse("checkpoint_interval","1").toLong
+    checkpointInterval = mainArgsMap.getOrElse("checkpoint_interval","-1").toLong
     checkpointMode = if(mainArgsMap.getOrElse("checkpoint_mode","") == checkpointModeMap.get(1).get) CheckpointingMode.EXACTLY_ONCE else CheckpointingMode.AT_LEAST_ONCE
     val group = mainArgsMap.getOrElse("group",className)
 
@@ -63,11 +63,12 @@ class BaseProgram extends App {
   }
 
   def getStreamEnvironment(): StreamExecutionEnvironment ={
-    val env =  StreamExecutionEnvironment.getExecutionEnvironment.enableCheckpointing(checkpointInterval)
+    val sEnv =  StreamExecutionEnvironment.getExecutionEnvironment
     if(checkpointInterval > 0){
-      env.getCheckpointConfig.setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE)
+      sEnv.enableCheckpointing(checkpointInterval)
+      sEnv.getCheckpointConfig.setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE)
     }
-    env
+    sEnv
   }
 
   def getKafkaConsumer(
