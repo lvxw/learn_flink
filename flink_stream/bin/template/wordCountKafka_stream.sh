@@ -23,7 +23,7 @@ function execute_mr(){
     $FLINK_INSTALL/bin/flink run \
         -m yarn-cluster \
         -ynm WordCountKafkaStream \
-        -yn 2 -yjm 2048 -ytm 2048 -ys 4 \
+        -yn 2 -yjm 1024 -ytm 1024 -ys 1 \
         -c com.test.business.template.WordCountKafkaStream \
         jar/LearnFlink.jar \
         "{\"topic\":\"${topic}\", \

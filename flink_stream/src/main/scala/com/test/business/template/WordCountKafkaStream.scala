@@ -1,11 +1,9 @@
 package com.test.business.template
 
-import java.text.SimpleDateFormat
-import java.util.Date
-
 import com.test.common.BaseProgram
 import org.apache.flink.streaming.api.scala._
 import org.apache.flink.streaming.api.windowing.time.Time
+import org.apache.flink.util.Collector
 
 /**
   *
@@ -16,17 +14,39 @@ import org.apache.flink.streaming.api.windowing.time.Time
         }
   */
 object WordCountKafkaStream extends BaseProgram{
-
   val result = sEnv
     .addSource(kafkaConsumer)
     .flatMap{x =>
       x.split("\\s")
     }
-    .map((_,1))
+    .map{x =>
+      if(x.isEmpty){
+        ("\"\"",1)
+      }else{
+        (x,1)
+      }
+    }
     .keyBy(0)
     .timeWindow(Time.seconds(5),Time.seconds(5))
-    .sum(1)
-    .map(x => (new SimpleDateFormat("yyyyMMddHHmm").format(new Date()),x._1+" -> "+x._2+""))
+    .apply{(tuple, window, values, out:Collector[Map[String,Int]]) =>
+      val time = window.maxTimestamp()+":"
+      val re = values.groupBy(_._1)
+        .map{x =>
+          var sum = 0
+          val key  = x._1
+          val value = x._2
+          for((k,v) <- value if  k ==key) {
+            sum += v
+          }
+          (time+key,sum)
+        }
+      out.collect(re)
+    }
+    .flatMap(x => x)
+    .map{x =>
+      val kv = x._1.split(":")
+      (kv(0),kv(1)+"->"+x._2)
+    }
 
   result.addSink(redisSink)
 }

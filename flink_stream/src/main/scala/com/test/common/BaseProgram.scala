@@ -1,6 +1,5 @@
 package com.test.common
 
-import java.text.SimpleDateFormat
 import java.util.Properties
 
 import com.test.util.ParamUtils
@@ -24,7 +23,7 @@ class BaseProgram extends App {
   var graphiteMap:Map[String,String]= _
   var redisMap:Map[String,String] = _
 
-  lazy val kafkaConsumer:FlinkKafkaConsumer08[String] = new FlinkKafkaConsumer08[String](topic, new SimpleStringSchema(), kafkaProps)
+  lazy val kafkaConsumer:FlinkKafkaConsumer08[String] = getKafkaConsumer()
   lazy val graphiteSink = new GraphiteSink[(String, String)](graphiteMap.getOrElse("graphite_host",""),graphiteMap.getOrElse("graphite_port","0").toInt,graphiteMap.getOrElse("graphite_batchSize","0").toInt)
   lazy val redisSink:RedisSink[(String, String)] = new RedisSink[(String, String)](
     new FlinkJedisPoolConfig.Builder().setHost(redisMap.getOrElse("redis_host","localhost")).setPort(redisMap.getOrElse("redis_port","6379").toInt).setDatabase(redisMap.getOrElse("redis_db","0").toInt).build(),
