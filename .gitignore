@@ -4,10 +4,9 @@
 target
 *.iml
 .project
-.pydevproject
 .cache-main
 jar
 tmp
 venv
-*.pyc
 classes
+dependency-reduced-pom.xml

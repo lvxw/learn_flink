@@ -32,7 +32,6 @@
     <java.version>1.8</java.version>
     <src.dir>src/main/scala</src.dir>
     <src.dir>src/main/java</src.dir>
-    <src.dir>src/main/python</src.dir>
     <src.res.dir>src/main/resources</src.res.dir>
     <test.src.dir>src/test/scala</test.src.dir>
     <test.src.dir>src/test/java</test.src.dir>
