@@ -29,7 +29,7 @@ class BaseProgram extends App {
   var redisMap:Map[String,String] = _
 
   lazy val sEnv = getStreamEnvironment()
-  lazy val graphiteSink = new GraphiteSink[(String, String)](graphiteMap.getOrElse("graphite_host",""),graphiteMap.getOrElse("graphite_port","0").toInt,graphiteMap.getOrElse("graphite_batchSize","0").toInt)
+  lazy val graphiteSink = new GraphiteSink[(String, String,Long)](graphiteMap.getOrElse("graphite_host",""),graphiteMap.getOrElse("graphite_port","0").toInt,graphiteMap.getOrElse("graphite_batchSize","0").toInt)
   lazy val redisSink:RedisSink[(String, String)] = new RedisSink[(String, String)](
     new FlinkJedisPoolConfig.Builder().setHost(redisMap.getOrElse("redis_host","localhost")).setPort(redisMap.getOrElse("redis_port","6379").toInt).setDatabase(redisMap.getOrElse("redis_db","0").toInt).build(),
     new RedisMapperImpl()

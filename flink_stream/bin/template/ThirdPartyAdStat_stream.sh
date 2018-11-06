@@ -22,9 +22,13 @@ function init(){
 function execute_mr(){
     $FLINK_INSTALL/bin/flink run \
         -m yarn-cluster \
+        -ynm EvenTimeStream \
         -yn 2 -yjm 1024 -ytm 1024 -ys 1 \
-        -c com.test.business.template.wordCountStream \
-        jar/LearnFlink.jar --port 9001
+        -c com.test.ThirdPartyAdStatStream \
+        jar/LearnFlink.jar \
+        "{\"topic\":\"${topic}\", \
+          \"run_pattern\":\"${RUN_PATTERN}\"
+        }"
 }
 
 set_env $1

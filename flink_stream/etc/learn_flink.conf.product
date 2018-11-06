@@ -9,7 +9,7 @@ LZO_JAR=$HADOOP_INSTALL/share/hadoop/common/hadoop-lzo-0.4.20-SNAPSHOT.jar
 HIVE_INSTALL=$BASE_PATH/hive
 
 # flink
-FLINK_INSTALL=$BASE_PATH/flink
+FLINK_INSTALL=/home/hadoop/lvxw/flink
 
 # Sqoop
 SQOOP_INSTALL=$BASE_PATH/sqoop

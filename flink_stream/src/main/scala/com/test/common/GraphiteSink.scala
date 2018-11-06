@@ -11,12 +11,15 @@ class GraphiteSink[IN](val host:String,port:Int,batchSize:Int) extends RichSinkF
 
   @throws[Exception]
   override def invoke(input: IN): Unit = {
-    val tuple = input.asInstanceOf[(String,String)]
-    if (graphite.isConnected) {
-      println("the graphite is connected.")
+    val tuple = input.asInstanceOf[(String,String,Long)]
+    if (!graphite.isConnected) {
+      graphite.connect()
     }
 
-    println("键是："+tuple._1,"值是:"+tuple._2)
+//    println(tuple)
+
+    graphite.send(tuple._1,tuple._2,tuple._3)
+    graphite.flush()
   }
 
   @throws[Exception]

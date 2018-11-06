@@ -17,7 +17,7 @@ object wordCountStream extends App {
 
   val env: StreamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment
 
-  private val stream: DataStream[String] = env.socketTextStream("localhost", port)
+  private val stream: DataStream[String] = env.socketTextStream("10.1.7.131", port)
 
   val result = stream.flatMap(_.split("\\s"))
     .map(WordCount(_,1))
