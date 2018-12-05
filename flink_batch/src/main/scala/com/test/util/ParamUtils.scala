@@ -23,7 +23,7 @@ object ParamUtils {
   def jsonStrToMap(jsonStr:String):Any ={
     val jsonObj = JSON.parseFull(jsonStr)
     jsonObj match {
-      case Some(map: Map[String, String]) => map
+      case Some(map: Map[String, Any]) => map
       case _ => None
     }
   }

@@ -14,7 +14,7 @@ import org.apache.flink.core.fs.FileSystem.WriteMode
           \"run_pattern\":\"local\"
         }
   */
-object WordCountSQL extends BaseProgram{
+object WordCountSql extends BaseProgram{
   case class WordCount(word:String, num:Long)
 
   val text = env.readTextFile(inputDir)

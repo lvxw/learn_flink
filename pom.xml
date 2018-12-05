@@ -37,10 +37,10 @@
     <test.src.dir>src/test/java</test.src.dir>
     <test.res.dir>src/test/resources</test.res.dir>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <scala.version>2.11.12</scala.version>
+    <scala.version>2.11.11</scala.version>
     <scala.main>2.11</scala.main>
     <hadoop.version>2.4.1</hadoop.version>
-    <flink.version>1.6.1</flink.version>
+    <flink.version>1.4.2</flink.version>
     <jarfile.name>LearnFlink</jarfile.name>
     <jar.out.dir>jar</jar.out.dir>
     <maven.build.timestamp.format>yyyyMMdd-HHmmss</maven.build.timestamp.format>

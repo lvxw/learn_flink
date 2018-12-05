@@ -12,8 +12,9 @@ class BaseProgram extends App {
   var outputDir:String = _
   var dataDate:String = _
 
-  val runPatternList = List("local","test","public")
-  val env: ExecutionEnvironment = getLinkEnvironment()
+  lazy val runPatternList = List("local","test","public")
+  lazy val conf = new Configuration()
+  lazy val env: ExecutionEnvironment = getFlinkEnvironment()
   lazy val tEnv = TableEnvironment.getTableEnvironment(env)
 
   def init(): Unit ={
@@ -28,19 +29,24 @@ class BaseProgram extends App {
     dataDate = paramMap.getOrElse("data_date","")
   }
 
-  def getLinkEnvironment():ExecutionEnvironment = {
-    val conf = new Configuration()
+  def setFlinkConf(): Unit ={
     conf.setBoolean("fs.overwrite-file", true)
     conf.setBoolean("fs.output.always-create-directory", true)
-    conf.setString("fs.default-scheme", "hdfs://artemis-02:9000/")
-
     if(runPattern == runPatternList(0)){
       conf.setString("fs.default-scheme","file:///")
-      return ExecutionEnvironment.createLocalEnvironment(conf)
     }
-    ExecutionEnvironment.getExecutionEnvironment
+  }
+
+  def getFlinkEnvironment():ExecutionEnvironment = {
+
+    if(runPattern == runPatternList(0)){
+      ExecutionEnvironment.createLocalEnvironment(conf)
+    }else{
+      ExecutionEnvironment.getExecutionEnvironment
+    }
   }
 
   init()
   initParams()
+  setFlinkConf()
 }

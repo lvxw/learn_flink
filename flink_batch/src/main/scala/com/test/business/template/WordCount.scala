@@ -21,5 +21,6 @@ object WordCount extends BaseProgram{
     .map ((_, 1))
       .groupBy(0)
       .sum(1)
+  result.print()
   result.writeAsCsv(outputDir,"\n",",",WriteMode.OVERWRITE)
 }
